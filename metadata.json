@@ -2,7 +2,7 @@
     "name": "CopyTrackName",
     "author": "dobryjigrok",
     "description": "Скрипт для копирования названия трека в формате 'Исполнитель - Название'",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "type": "script",
     "script": "script.js",
     "tags": [
