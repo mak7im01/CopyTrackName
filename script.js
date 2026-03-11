@@ -55,29 +55,9 @@
 
     // Функция для получения цвета текста из элемента
     function getTextColor() {
-        // Приоритет: имя пользователя
-        const userNameElement = document.querySelector('.UserProfile_userName__PTRuJ');
-        if (userNameElement) {
-            const computedStyle = window.getComputedStyle(userNameElement);
-            return computedStyle.color;
-        }
-        
-        // Запасной вариант - заголовок страницы
-        const titleElement = document.querySelector('.PageHeaderTitle_title__caKyB');
-        if (titleElement) {
-            const computedStyle = window.getComputedStyle(titleElement);
-            return computedStyle.color;
-        }
-        
-        // Альтернативный вариант - любой текстовый элемент
-        const textElement = document.querySelector('._MWOVuZRvUQdXKTMcOPx');
-        if (textElement) {
-            const computedStyle = window.getComputedStyle(textElement);
-            return computedStyle.color;
-        }
-        
-        // Если не нашли, возвращаем белый по умолчанию
-        return 'rgb(255, 255, 255)';
+        // Используем CSS-переменную Яндекс Музыки для динамического цвета
+        // Это более надежный метод, чем поиск конкретных элементов DOM
+        return 'var(--ym-controls-color-primary-text-enabled_variant, #ffffff)';
     }
 
     // Функция для создания иконки копирования
