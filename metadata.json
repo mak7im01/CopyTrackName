@@ -1,8 +1,9 @@
 {
     "name": "CopyTrackName",
+    "libraryLogo": "logo.svg",
     "author": "dobryjigrok",
     "description": "Скрипт для копирования названия трека в формате 'Исполнитель - Название'",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "type": "script",
     "script": "script.js",
     "tags": [
@@ -11,5 +12,9 @@
         "track",
         "utility"
     ],
-    "fromPext": true
+    "image": "logo.svg",
+    "banner": "banner.svg",
+    "fromPext": true,
+    "installSource": "local",
+    "id": "27edf2451137417e1bbc26fb"
 }
