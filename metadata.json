@@ -1,10 +1,14 @@
 {
+    "id": "a7629157-e767-437f-b7c6-62e2d0e924c5",
     "name": "CopyTrackName",
-    "libraryLogo": "logo.svg",
-    "author": "dobryjigrok",
     "description": "Скрипт для копирования названия трека в формате 'Исполнитель - Название'",
-    "version": "1.1.0",
+    "version": "1.1.1",
+    "author": "dobryjigrok",
     "type": "script",
+    "image": "logo.svg",
+    "banner": "banner.svg",
+    "libraryLogo": "logo.svg",
+    "css": "style.css",
     "script": "script.js",
     "tags": [
         "script",
@@ -12,9 +16,12 @@
         "track",
         "utility"
     ],
-    "image": "logo.svg",
-    "banner": "banner.svg",
+    "dependencies": [],
+    "conflictsWith": [],
+    "allowedUrls": [],
+    "supportedVersions": [],
     "fromPext": true,
-    "installSource": "local",
-    "id": "27edf2451137417e1bbc26fb"
+    "installSource": "store",
+    "storeAddonId": "a7629157-e767-437f-b7c6-62e2d0e924c5",
+    "packageHash": "010479ed230ec2f6632b0179b48c12232204cd9ef5a012e7528878749b0c9b7c"
 }
