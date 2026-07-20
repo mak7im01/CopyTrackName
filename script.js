@@ -88,19 +88,46 @@
 
     // ─── Цвет иконки ─────────────────────────────────────────────────────────
 
-    function getTextColor() {
-        return 'var(--ym-controls-color-primary-text-enabled_variant, #ffffff)';
+    /**
+     * Проверяет, находится ли metaContainer в навбаре или полноэкранном плеере.
+     */
+    function isInsidePlayerContext(metaContainer) {
+        const navbar = document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_player__ASKKs');
+        if (navbar && navbar.contains(metaContainer)) return true;
+        const fullscreen = document.querySelector('div[data-test-id="FULLSCREEN_PLAYER_MODAL"]');
+        if (fullscreen && fullscreen.contains(metaContainer)) return true;
+        return false;
+    }
+
+    /**
+     * Читает computed color из span названия трека.
+     * Возвращает цвет только если контейнер находится в навбаре или полноэкранном плеере,
+     * иначе возвращает null (чтобы использовался fallback CSS-переменная).
+     */
+    function getTitleColor(metaContainer) {
+        if (!metaContainer || !isInsidePlayerContext(metaContainer)) return null;
+        const titleSpan = metaContainer.querySelector(
+            '[data-test-id="TRACK_TITLE"] .Meta_title__GGBnH'
+        );
+        if (!titleSpan) return null;
+        const color = getComputedStyle(titleSpan).color;
+        return color && color !== 'rgba(0, 0, 0, 0)' ? color : null;
+    }
+
+    function getTextColor(metaContainer) {
+        const titleColor = getTitleColor(metaContainer);
+        return titleColor || 'var(--ym-controls-color-primary-text-enabled_variant, #ffffff)';
     }
 
     // ─── Создание иконки ──────────────────────────────────────────────────────
 
-    function createCopyIcon(settings) {
+    function createCopyIcon(settings, metaContainer) {
         const iconSize    = getNumSetting(settings, 'iconSize', 16);
         const iconOpacity = getNumSetting(settings, 'iconOpacity', 70) / 100;
         const useStatic   = getBoolSetting(settings, 'iconColor', false);
         const iconColor   = useStatic
             ? getStrSetting(settings, 'customColor', '#ffffff')
-            : getTextColor();
+            : getTextColor(metaContainer);
 
         const icon = document.createElement('button');
         icon.innerHTML = `
@@ -213,6 +240,24 @@
 
     // ─── Иконка в DOM ─────────────────────────────────────────────────────────
 
+    /**
+     * Вычисляет итоговую позицию иконки для данного контейнера.
+     * 1 = справа от названия трека (по умолчанию)
+     * 2 = слева от названия трека
+     * Если выбрана позиция 2 и включена опция «только в полноэкранном» —
+     * в навбаре позиция откатывается к 1.
+     */
+    function resolveIconPosition(settings, metaContainer) {
+        const position = getNumSetting(settings, 'iconPosition', 1);
+        if (position === 2 && getBoolSetting(settings, 'positionBeforeTitleFullscreenOnly', true)) {
+            const fullscreen = document.querySelector('div[data-test-id="FULLSCREEN_PLAYER_MODAL"]');
+            if (!fullscreen || !fullscreen.contains(metaContainer)) {
+                return 1;
+            }
+        }
+        return position;
+    }
+
     function addCopyIconToMeta(metaContainer, settings, forceUpdate = false) {
         const titleContainer = metaContainer.querySelector('.Meta_titleContainer__gDuXr');
         if (!titleContainer) return;
@@ -224,14 +269,35 @@
             return;
         }
 
-        if (existingIcon && forceUpdate) {
+        const position = resolveIconPosition(settings, metaContainer);
+
+        // Если иконка уже есть — проверяем что позиция не изменилась
+        if (existingIcon && !forceUpdate) {
+            const nodes = Array.from(titleContainer.childNodes);
+            const idx = nodes.indexOf(existingIcon);
+            const titleLink = titleContainer.querySelector('[data-test-id="TRACK_TITLE"]')?.closest('div, span')
+                || titleContainer.firstElementChild;
+            const titleIdx = titleLink ? nodes.indexOf(titleLink) : -1;
+
+            const positionCorrect = position === 2
+                ? idx === 0 || (titleIdx !== -1 && idx < titleIdx)  // слева от названия
+                : idx > (titleIdx !== -1 ? titleIdx : -1);          // справа от названия
+
+            if (positionCorrect) return;
             existingIcon.remove();
-        } else if (existingIcon && !forceUpdate) {
-            return;
+        } else if (existingIcon && forceUpdate) {
+            existingIcon.remove();
         }
 
-        const copyIcon = createCopyIcon(settings);
+        // Обновляем отступ в зависимости от позиции
+        const copyIcon = createCopyIcon(settings, metaContainer);
         copyIcon.classList.add('copy-track-icon');
+
+        if (position === 2) {
+            // Слева: отступ справа, убираем слева
+            copyIcon.style.marginLeft = '0';
+            copyIcon.style.marginRight = '8px';
+        }
 
         copyIcon.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -249,7 +315,13 @@
             }
         });
 
-        titleContainer.appendChild(copyIcon);
+        if (position === 2) {
+            // Слева от названия — вставляем первым дочерним элементом
+            titleContainer.insertBefore(copyIcon, titleContainer.firstChild);
+        } else {
+            // Справа от названия — добавляем в конец
+            titleContainer.appendChild(copyIcon);
+        }
     }
 
     function processMetaContainers(settings, forceUpdate = false) {
@@ -262,10 +334,11 @@
 
     function updateIconColors(settings) {
         const useStatic = getBoolSetting(settings, 'iconColor', false);
-        const color = useStatic
-            ? getStrSetting(settings, 'customColor', '#ffffff')
-            : getTextColor();
         document.querySelectorAll('.copy-track-icon').forEach(icon => {
+            const metaContainer = icon.closest('.Meta_root__R8n1h');
+            const color = useStatic
+                ? getStrSetting(settings, 'customColor', '#ffffff')
+                : getTextColor(metaContainer);
             icon.style.color = color;
         });
     }
@@ -297,10 +370,15 @@
         const opacityChanged = getNumSetting(nextSettings, 'iconOpacity', 70) !== getNumSetting(prevSettings, 'iconOpacity', 70);
         const enableChanged  = getBoolSetting(nextSettings, 'enableCopyIcon', true) !== getBoolSetting(prevSettings, 'enableCopyIcon', true);
 
+        const positionChanged =
+            getNumSetting(nextSettings, 'iconPosition', 1) !== getNumSetting(prevSettings, 'iconPosition', 1) ||
+            getBoolSetting(nextSettings, 'positionBeforeTitleFullscreenOnly', true) !== getBoolSetting(prevSettings, 'positionBeforeTitleFullscreenOnly', true);
+
         if (colorChanged)   updateIconColors(nextSettings);
         if (sizeChanged)    updateIconSizes(nextSettings);
         if (opacityChanged) updateIconOpacity(nextSettings);
-        if (enableChanged)  processMetaContainers(nextSettings, true);
+        // При смене позиции или enable — пересоздаём все иконки
+        if (enableChanged || positionChanged) processMetaContainers(nextSettings, true);
     }
 
     // ─── Наблюдатель за DOM ───────────────────────────────────────────────────
@@ -310,7 +388,7 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Периодическое обновление динамического цвета
+    // Периодическое обновление динамического цвета (подхватывает смену трека в навбаре/полноэкране)
     setInterval(() => {
         if (currentSettings && !getBoolSetting(currentSettings, 'iconColor', false)) {
             updateIconColors(currentSettings);

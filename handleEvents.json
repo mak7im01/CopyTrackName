@@ -87,6 +87,32 @@
                     "step": 5,
                     "value": 70,
                     "defaultParameter": 70
+                },
+                {
+                    "id": "iconPosition",
+                    "name": "Позиция иконки",
+                    "description": "Где отображать иконку копирования относительно названия трека",
+                    "type": "selector",
+                    "selected": 1,
+                    "options": {
+                        "1": {
+                            "event": "positionAfterTitle",
+                            "name": "Справа от названия трека"
+                        },
+                        "2": {
+                            "event": "positionBeforeTitle",
+                            "name": "Слева от названия трека"
+                        }
+                    },
+                    "defaultParameter": 1
+                },
+                {
+                    "id": "positionBeforeTitleFullscreenOnly",
+                    "name": "Слева от названия — только в полноэкранном",
+                    "description": "Если включено, позиция «Слева от названия» применяется только в полноэкранном плеере. В навбаре иконка будет справа",
+                    "type": "button",
+                    "bool": true,
+                    "defaultParameter": true
                 }
             ]
         },
